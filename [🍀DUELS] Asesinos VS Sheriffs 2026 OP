@@ -1,0 +1,234 @@
+-- Cargar servicios necesarios
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+
+-- Variables del jugador
+local player = Players.LocalPlayer
+
+-- Crear ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ArmasGUI"
+screenGui.Parent = CoreGui
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- Crear el botón principal
+local boton = Instance.new("TextButton")
+boton.Name = "BotonArmas"
+boton.Size = UDim2.new(0, 200, 0, 50)
+boton.Position = UDim2.new(0.5, -100, 0.5, -25) -- Posición inicial centrada
+boton.Text = "TODAS LAS ARMAS"
+boton.TextColor3 = Color3.new(1, 1, 1)
+boton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+boton.BackgroundTransparency = 0.2
+boton.Font = Enum.Font.GothamBold
+boton.TextSize = 18
+boton.TextScaled = true
+boton.BorderSizePixel = 2
+boton.BorderColor3 = Color3.fromRGB(255, 255, 255)
+boton.Parent = screenGui
+
+-- Añadir esquinas redondeadas al botón
+local UICornerBoton = Instance.new("UICorner")
+UICornerBoton.CornerRadius = UDim.new(0, 10)
+UICornerBoton.Parent = boton
+
+-- Crear TextLabel para los créditos
+local creditosLabel = Instance.new("TextLabel")
+creditosLabel.Name = "CreditosLabel"
+creditosLabel.Size = UDim2.new(0, 150, 0, 25)
+creditosLabel.Position = UDim2.new(0.5, -75, 0.85, 0) -- Posición en la parte inferior
+creditosLabel.Text = "BY EL PEPE"
+creditosLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+creditosLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+creditosLabel.BackgroundTransparency = 0.3
+creditosLabel.Font = Enum.Font.GothamBold
+creditosLabel.TextSize = 14
+creditosLabel.TextScaled = true
+creditosLabel.BorderSizePixel = 1
+creditosLabel.BorderColor3 = Color3.fromRGB(255, 215, 0) -- Dorado
+creditosLabel.Parent = screenGui
+
+-- Añadir esquinas redondeadas al label de créditos
+local UICornerCreditos = Instance.new("UICorner")
+UICornerCreditos.CornerRadius = UDim.new(0, 5)
+UICornerCreditos.Parent = creditosLabel
+
+-- Añadir un borde decorativo al label de créditos
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Thickness = 1
+UIStroke.Color = Color3.fromRGB(255, 215, 0) -- Dorado
+UIStroke.Parent = creditosLabel
+
+-- Efecto de brillo para los créditos (opcional)
+local function crearEfectoBrillo()
+    local brillo = Instance.new("Frame")
+    brillo.Size = UDim2.new(1, 0, 1, 0)
+    brillo.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    brillo.BackgroundTransparency = 0.8
+    brillo.Parent = creditosLabel
+    
+    local brilloCorner = Instance.new("UICorner")
+    brilloCorner.CornerRadius = UDim.new(0, 5)
+    brilloCorner.Parent = brillo
+    
+    -- Animación del brillo
+    local tweenInfo = TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+    local tween = TweenService:Create(brillo, tweenInfo, {BackgroundTransparency = 0.4})
+    tween:Play()
+end
+crearEfectoBrillo()
+
+-- Hacer el botón movible
+local dragging = false
+local dragStart = nil
+local startPos = nil
+
+-- Función para actualizar la posición del botón
+local function updatePosition(input)
+    local delta = input.Position - dragStart
+    local newPosition = UDim2.new(
+        startPos.X.Scale, 
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale, 
+        startPos.Y.Offset + delta.Y
+    )
+    boton.Position = newPosition
+end
+
+-- Conectar eventos de arrastre
+boton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = boton.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+boton.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        if dragging then
+            updatePosition(input)
+        end
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) and dragging then
+        updatePosition(input)
+    end
+end)
+
+-- Función que ejecuta el código de las armas
+local function ejecutarCodigoArmas()
+    -- Tu código original aquí
+    local skinsFolder = player:FindFirstChild("SkinsFolder")
+    if not skinsFolder then 
+        warn("No se encontró SkinsFolder")
+        
+        -- Mensaje de error en el label de créditos
+        creditosLabel.Text = "ERROR: No SkinsFolder"
+        creditosLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        task.wait(2)
+        creditosLabel.Text = "BY EL PEPE"
+        creditosLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        return 
+    end
+
+    local function giveItems(folder)
+        for _, item in pairs(folder:GetChildren()) do
+            if not skinsFolder:FindFirstChild(item.Name) then
+                local stringValue = Instance.new("StringValue")
+                stringValue.Name = item.Name
+                stringValue.Value = item.Name
+
+                local count = Instance.new("IntValue")
+                count.Name = "Count"
+                count.Value = 86
+                count.Parent = stringValue
+
+                stringValue.Parent = skinsFolder
+            end
+        end
+    end
+
+    local skins = ReplicatedStorage:FindFirstChild("Skins")
+    local exclusive = ReplicatedStorage:FindFirstChild("ExclusiveSkins")
+
+    if skins then
+        if skins:FindFirstChild("Guns") then giveItems(skins.Guns) end
+        if skins:FindFirstChild("Knives") then giveItems(skins.Knives) end
+    end
+
+    if exclusive then
+        if exclusive:FindFirstChild("Guns") then giveItems(exclusive.Guns) end
+        if exclusive:FindFirstChild("Knives") then giveItems(exclusive.Knives) end
+    end
+
+    -- Notificación visual de éxito
+    boton.Text = "¡ARMAS OBTENIDAS!"
+    boton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+    
+    -- Cambiar créditos temporalmente
+    creditosLabel.Text = "¡GRACIAS POR USAR!"
+    creditosLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+    
+    -- Efecto de animación
+    local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local tweenBoton = TweenService:Create(boton, tweenInfo, {TextColor3 = Color3.new(1, 1, 1)})
+    tweenBoton:Play()
+    
+    local tweenCreditos = TweenService:Create(creditosLabel, tweenInfo, {TextColor3 = Color3.new(1, 1, 1)})
+    tweenCreditos:Play()
+    
+    -- Volver al texto original después de 2 segundos
+    task.wait(2)
+    boton.Text = "TODAS LAS ARMAS"
+    boton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    creditosLabel.Text = "BY EL PEPE"
+    creditosLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+end
+
+-- Conectar el clic del botón
+boton.MouseButton1Click:Connect(ejecutarCodigoArmas)
+boton.TouchTap:Connect(ejecutarCodigoArmas) -- Para dispositivos táctiles
+
+-- Función para limpiar la GUI cuando sea necesario
+local function limpiarGUI()
+    if screenGui then
+        screenGui:Destroy()
+    end
+end
+
+-- Botón para cerrar/eliminar la GUI
+local botonCerrar = Instance.new("TextButton")
+botonCerrar.Size = UDim2.new(0, 30, 0, 30)
+botonCerrar.Position = UDim2.new(1, -35, 0, 5)
+botonCerrar.Text = "X"
+botonCerrar.TextColor3 = Color3.new(1, 1, 1)
+botonCerrar.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+botonCerrar.Font = Enum.Font.GothamBold
+botonCerrar.TextSize = 20
+botonCerrar.Parent = boton
+
+local cerrarCorner = Instance.new("UICorner")
+cerrarCorner.CornerRadius = UDim.new(1, 0)
+cerrarCorner.Parent = botonCerrar
+
+botonCerrar.MouseButton1Click:Connect(limpiarGUI)
+botonCerrar.TouchTap:Connect(limpiarGUI)
+
+-- Animación de entrada para los créditos
+local tweenEntrada = TweenService:Create(creditosLabel, TweenInfo.new(0.5, Enum.EasingStyle.Back), {Position = UDim2.new(0.5, -75, 0.85, 0)})
+task.wait(0.1)
+tweenEntrada:Play()
+
+print("Botón de armas cargado correctamente. ¡Créditos: BY EL PEPE!")
